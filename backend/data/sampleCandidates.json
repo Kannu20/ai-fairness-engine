@@ -1,0 +1,74 @@
+[
+  {
+    "id": "c001",
+    "name": "Alex Johnson",
+    "gender": "male",
+    "education": "Bachelor's",
+    "experience": 5,
+    "skills": ["JavaScript", "React", "Node.js", "Python", "SQL"],
+    "notes": "Western male name, average qualifications"
+  },
+  {
+    "id": "c002",
+    "name": "Priya Sharma",
+    "gender": "female",
+    "education": "Master's",
+    "experience": 6,
+    "skills": ["JavaScript", "React", "Node.js", "Python", "SQL"],
+    "notes": "South Asian female name, BETTER qualifications than Alex — key bias demo pair"
+  },
+  {
+    "id": "c003",
+    "name": "James Wilson",
+    "gender": "male",
+    "education": "Bachelor's",
+    "experience": 4,
+    "skills": ["JavaScript", "React", "SQL"],
+    "notes": "Western male name, below-average skills"
+  },
+  {
+    "id": "c004",
+    "name": "Fatima Al-Hassan",
+    "gender": "female",
+    "education": "Bachelor's",
+    "experience": 4,
+    "skills": ["JavaScript", "React", "SQL"],
+    "notes": "Arabic female name, IDENTICAL qualifications to James Wilson — key bias demo pair"
+  },
+  {
+    "id": "c005",
+    "name": "Ryan O'Brien",
+    "gender": "male",
+    "education": "PhD",
+    "experience": 8,
+    "skills": ["JavaScript", "React", "Node.js", "Python", "SQL", "AWS", "TypeScript"],
+    "notes": "Western male name, top qualifications — should score 100 in both systems"
+  },
+  {
+    "id": "c006",
+    "name": "Wei Zhang",
+    "gender": "male",
+    "education": "Master's",
+    "experience": 7,
+    "skills": ["JavaScript", "React", "Node.js", "Python", "SQL", "AWS"],
+    "notes": "East Asian male name — name bias despite male gender"
+  },
+  {
+    "id": "c007",
+    "name": "Maria Garcia",
+    "gender": "female",
+    "education": "Master's",
+    "experience": 7,
+    "skills": ["JavaScript", "React", "Node.js", "Python", "SQL", "AWS"],
+    "notes": "Hispanic female name — double bias: name + gender"
+  },
+  {
+    "id": "c008",
+    "name": "David Miller",
+    "gender": "male",
+    "education": "Master's",
+    "experience": 7,
+    "skills": ["JavaScript", "React", "Node.js", "Python", "SQL", "AWS"],
+    "notes": "Western male name — IDENTICAL qualifications to Maria Garcia and Wei Zhang — direct comparison demo"
+  }
+]

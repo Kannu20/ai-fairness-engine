@@ -19,8 +19,17 @@ router.get(
 
 router.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: `${process.env.CLIENT_URL}/login?error=oauth_failed` }),
+  (req, res, next) => {
+    console.log("[OAuth] Google callback reached");
+    console.log("[OAuth] Query:", req.query);
+    console.log("[OAuth] Error:", req.query.error);
+    next();
+  },
+  passport.authenticate("google", {
+    failureRedirect: `${process.env.CLIENT_URL}/login?error=oauth_failed`,
+  }),
   (req, res) => {
+    console.log("[OAuth] User authenticated:", req.user.email);
     const token = generateToken(req.user);
     res.cookie("token", token, {
       httpOnly: true,
@@ -71,8 +80,9 @@ router.post("/signup", async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
-    console.error("Signup error:", err);
-    res.status(500).json({ success: false, message: "Registration failed" });
+    console.error("Signup error:", err.message);
+    console.error("Full error:", err);
+    res.status(500).json({ success: false, message: err.message || "Registration failed" });
   }
 });
 
@@ -114,8 +124,9 @@ router.post("/login", async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar },
     });
   } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ success: false, message: "Login failed" });
+    console.error("Login error:", err.message);
+    console.error("Full error:", err);
+    res.status(500).json({ success: false, message: err.message || "Login failed" });
   }
 });
 

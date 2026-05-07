@@ -24,9 +24,13 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ─── MONGODB CONNECTION ──────────────────────────────────────────────────────
+let mongoReady = false;
 mongoose
   .connect(process.env.MONGODB_URI || "mongodb://localhost:27017/ai-fairness-engine")
-  .then(() => console.log("   MongoDB: ✓ Connected"))
+  .then(() => {
+    mongoReady = true;
+    console.log("   MongoDB: ✓ Connected");
+  })
   .catch((err) => console.error("   MongoDB: ✗ Connection failed:", err.message));
 
 // ─── MIDDLEWARE ────────────────────────────────────────────────────────────────
@@ -38,12 +42,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ─── SESSION ──────────────────────────────────────────────────────────────────
-app.use(
   session({
     secret: process.env.SESSION_SECRET || "fallback-dev-secret-change-in-production",
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI || "mongodb://localhost:27017/ai-fairness-engine" }),
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI || "mongodb://localhost:27017/ai-fairness-engine",
+      autoRemove: "native",
+    }),
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -51,7 +57,7 @@ app.use(
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   })
-);
+
 
 // ─── PASSPORT ─────────────────────────────────────────────────────────────────
 app.use(passport.initialize());

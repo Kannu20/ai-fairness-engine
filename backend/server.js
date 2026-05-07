@@ -5,17 +5,29 @@
 
 require("dotenv").config();
 const express = require("express");
+const mongoose = require("mongoose");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const cors = require("./middleware/cors");
 const rateLimiter = require("./middleware/rateLimit");
+const passport = require("./config/passport");
 
 // Route imports
+const authRoutes = require("./routes/auth");
 const scoreRoutes = require("./routes/score");
 const explainRoutes = require("./routes/explain");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// ─── MONGODB CONNECTION ──────────────────────────────────────────────────────
+mongoose
+  .connect(process.env.MONGODB_URI || "mongodb://localhost:27017/ai-fairness-engine")
+  .then(() => console.log("   MongoDB: ✓ Connected"))
+  .catch((err) => console.error("   MongoDB: ✗ Connection failed:", err.message));
 
 // ─── MIDDLEWARE ────────────────────────────────────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
@@ -23,6 +35,27 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(cors);
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// ─── SESSION ──────────────────────────────────────────────────────────────────
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "fallback-dev-secret-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI || "mongodb://localhost:27017/ai-fairness-engine" }),
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    },
+  })
+);
+
+// ─── PASSPORT ─────────────────────────────────────────────────────────────────
+app.use(passport.initialize());
+app.use(passport.session());
 
 // ─── RATE LIMITING ─────────────────────────────────────────────────────────────
 app.use("/api/", rateLimiter);
@@ -39,6 +72,7 @@ app.get("/health", (req, res) => {
 });
 
 // ─── API ROUTES ────────────────────────────────────────────────────────────────
+app.use("/api/auth", authRoutes);
 app.use("/api/score", scoreRoutes);
 app.use("/api/explain", explainRoutes);
 
@@ -58,16 +92,54 @@ app.get("/api/domains", (req, res) => {
         name: "Resume / Hiring",
         description: "Automated hiring and resume screening",
         active: true,
-        biasFactors: ["gender", "name_perception", "age"],
-        fairFactors: ["skills", "experience", "education"],
+        icon: "👔",
+        biasFactors: ["gender", "name_perception", "age", "race", "disability"],
+        fairFactors: ["skills", "experience", "education", "certifications"],
+      },
+      {
+        id: "healthcare",
+        name: "Healthcare",
+        description: "Medical diagnosis and treatment recommendations",
+        active: true,
+        icon: "🏥",
+        biasFactors: ["race", "gender", "age", "socioeconomic_status", "disability"],
+        fairFactors: ["symptoms", "medical_history", "test_results", "urgency"],
       },
       {
         id: "loan",
         name: "Loan Approval",
         description: "Credit and loan approval decisions",
-        active: false,
-        biasFactors: ["zip_code", "race_proxy", "gender"],
-        fairFactors: ["income", "credit_score", "debt_ratio"],
+        active: true,
+        icon: "💳",
+        biasFactors: ["zip_code", "race_proxy", "gender", "age", "marital_status"],
+        fairFactors: ["income", "credit_score", "debt_ratio", "employment_history"],
+      },
+      {
+        id: "justice",
+        name: "Criminal Justice",
+        description: "Risk assessment and sentencing decisions",
+        active: true,
+        icon: "⚖️",
+        biasFactors: ["race", "socioeconomic_status", "gender", "age", "neighborhood"],
+        fairFactors: ["criminal_history", "offense_severity", "recidivism_risk", "rehabilitation"],
+      },
+      {
+        id: "insurance",
+        name: "Insurance",
+        description: "Premium pricing and coverage decisions",
+        active: true,
+        icon: "🛡️",
+        biasFactors: ["gender", "race", "disability", "genetic_info", "location"],
+        fairFactors: ["risk_assessment", "claim_history", "coverage_type", "age_band"],
+      },
+      {
+        id: "education",
+        name: "Education",
+        description: "Admissions and academic evaluation",
+        active: true,
+        icon: "🎓",
+        biasFactors: ["race", "gender", "socioeconomic_status", "disability", "geography"],
+        fairFactors: ["grades", "test_scores", "extracurriculars", "essays"],
       },
     ],
   });
@@ -91,8 +163,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`\n⚖️  AI Fairness Engine API`);
   console.log(`   Running on: http://localhost:${PORT}`);
-  console.log(`   Mode: ${process.env.NODE_ENV || "development"}`);
-  console.log(`   Gemini AI: ${process.env.GEMINI_API_KEY ? "✓ Connected" : "✗ No API key"}\n`);
+  console.log(`   Mode: ${process.env.NODE_ENV || "development"}\n`);
 });
 
 module.exports = app;

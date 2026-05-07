@@ -1,7 +1,23 @@
 import React, { useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 import Header from "./components/Header";
 import Dashboard from "./pages/Dashboard";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+
+
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="loading-screen"><div className="spinner" /></div>;
+  return user ? children : <Navigate to="/" replace />;
+}
+
+function PublicRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="loading-screen"><div className="spinner" /></div>;
+  return user ? <Navigate to="/dashboard" replace /> : children;
+}
 
 export default function App() {
   const [apiKey, setApiKey] = useState(
@@ -24,7 +40,11 @@ export default function App() {
       <Header apiKey={apiKey} setApiKey={handleSetApiKey} />
       <main>
         <Routes>
-          <Route path="/*" element={<Dashboard />} />
+          <Route path="/" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/signup" element={<PublicRoute><SignupPage /></PublicRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 

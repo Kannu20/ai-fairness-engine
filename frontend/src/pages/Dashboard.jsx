@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import clsx from "clsx";
+import { useAuth } from "../context/AuthContext";
+import "./Dashboard.css";
 import CandidateForm from "../components/CandidateForm";
 import ScoreCard from "../components/ScoreCard";
 import ComparisonTable from "../components/ComparisonTable";
@@ -32,9 +34,69 @@ export default function Dashboard() {
     }
   };
 
+   const { user, logout } = useAuth();
+  
+    const stats = [
+      { icon: "🔍", label: "Models Audited", val: user?.modelsAudited || 0, color: "teal" },
+      { icon: "⚠️", label: "Bias Alerts",    val: 0,  color: "amber" },
+      { icon: "📋", label: "Reports Generated", val: 0, color: "blue" },
+      { icon: "🛡️", label: "Fixes Applied",  val: 0,  color: "green" },
+    ];
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
       {/* Hero */}
+      <div className="dash-root">
+      {/* ── Navbar ───────────────────────────────────────── */}
+      <nav className="dash-nav">
+        <div className="dash-nav__logo">
+          <div className="logo-icon-sm">⚖</div>
+          <span>Equi<em>Sense</em></span>
+        </div>
+        <div className="dash-nav__right">
+          <div className="nav-badge">Free Plan</div>
+          <div className="nav-user">
+            {user?.avatar
+              ? <img src={user.avatar} alt={user.name} className="nav-avatar" referrerPolicy="no-referrer" />
+              : <div className="nav-avatar-fallback">{user?.name?.[0]}</div>
+            }
+            <span className="nav-name">{user?.name}</span>
+          </div>
+          <button className="nav-logout" onClick={logout}>Sign out</button>
+        </div>
+      </nav>
+
+      <div className="dash-body">
+        {/* Welcome banner */}
+        <div className="dash-welcome">
+          <div>
+            <div className="dash-badge">🎉 You're in — let's detect some bias</div>
+            <h1 className="dash-title">Welcome back, <span>{user?.name?.split(" ")[0]}</span></h1>
+            <p className="dash-sub">Your AI fairness audit dashboard. Start by uploading a model or connecting an API endpoint.</p>
+          </div>
+          <button className="cta-btn">+ Audit New Model</button>
+        </div>
+
+        {/* Stats grid */}
+        <div className="dash-stats">
+          {stats.map((s, i) => (
+            <div className={`stat-card stat-card--${s.color}`} key={i}>
+              <div className="stat-card__icon">{s.icon}</div>
+              <div className="stat-card__val">{s.val}</div>
+              <div className="stat-card__label">{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Empty state */}
+        <div className="dash-empty">
+          <div className="empty-icon">🔍</div>
+          <h3>No models audited yet</h3>
+          <p>Upload your first AI model or connect an API endpoint to start detecting bias.</p>
+          <button className="cta-btn cta-btn--sm">Upload Model →</button>
+        </div>
+      </div>
+    </div>
       <div className="text-center mb-8">
         <span className="badge bg-amber-100 text-amber-700 mb-3 inline-block">
           ⚡ Hackathon Demo — AI Ethics & Fairness

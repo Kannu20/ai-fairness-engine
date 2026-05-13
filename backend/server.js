@@ -26,7 +26,9 @@ const PORT = process.env.PORT || 5000;
 // ─── MONGODB CONNECTION ──────────────────────────────────────────────────────
 let mongoReady = false;
 mongoose
-  .connect(process.env.MONGODB_URI || "mongodb://localhost:27017/ai-fairness-engine")
+  .connect(process.env.MONGODB_URI , {
+    serverSelectionTimeoutMS: 10000,
+  })
   .then(() => {
     mongoReady = true;
     console.log("   MongoDB: ✓ Connected");
@@ -42,14 +44,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ─── SESSION ──────────────────────────────────────────────────────────────────
+  app.use(
   session({
     secret: process.env.SESSION_SECRET || "fallback-dev-secret-change-in-production",
     resave: false,
     saveUninitialized: false,
+
     store: MongoStore.create({
-      mongoUrl: process.env.MONGODB_URI || "mongodb://localhost:27017/ai-fairness-engine",
-      autoRemove: "native",
+      mongoUrl: process.env.MONGODB_URI,
+      collectionName: "sessions",
     }),
+
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -57,6 +62,7 @@ app.use(cookieParser());
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   })
+);
 
 
 // ─── PASSPORT ─────────────────────────────────────────────────────────────────
@@ -73,7 +79,8 @@ app.get("/health", (req, res) => {
     service: "AI Fairness Engine API",
     version: "1.0.0",
     timestamp: new Date().toISOString(),
-    gemini: !!process.env.GEMINI_API_KEY,
+    mongoConnected: mongoReady,
+    geminiConfigured: !!process.env.GEMINI_API_KEY,
   });
 });
 

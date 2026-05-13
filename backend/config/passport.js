@@ -24,33 +24,53 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+
+        console.log("Google Profile:", JSON.stringify(profile, null, 2));
+
+        const email = profile.emails?.[0]?.value;
+
+        if (!email) {
+          return done(new Error("Google account email not found"), null);
+        }
+
         let user = await User.findOne({ googleId: profile.id });
 
         if (!user) {
-          user = await User.findOne({ email: profile.emails[0].value });
+
+          user = await User.findOne({ email });
 
           if (user) {
+
             user.googleId = profile.id;
             user.lastLogin = Date.now();
+
             await user.save();
+
           } else {
+
             user = await User.create({
               googleId: profile.id,
               name: profile.displayName,
-              email: profile.emails[0].value,
-              avatar: profile.photos[0]?.value || "",
+              email,
+              avatar: profile.photos?.[0]?.value || "",
               isVerified: true,
               lastLogin: Date.now(),
             });
           }
+
         } else {
+
           user.lastLogin = Date.now();
           await user.save();
         }
 
-        done(null, user);
+        return done(null, user);
+
       } catch (err) {
-        done(err, null);
+
+        console.error("GOOGLE AUTH ERROR:", err);
+
+        return done(err, null);
       }
     }
   )
